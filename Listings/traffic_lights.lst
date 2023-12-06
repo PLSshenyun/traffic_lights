@@ -1,0 +1,336 @@
+C51 COMPILER V9.60.7.0   TRAFFIC_LIGHTS                                                    12/03/2023 15:13:00 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TRAFFIC_LIGHTS
+OBJECT MODULE PLACED IN .\Objects\traffic_lights.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE traffic_lights.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listin
+                    -gs\traffic_lights.lst) TABS(2) OBJECT(.\Objects\traffic_lights.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include<intrins.h>
+   3          
+   4          // LED(RGY)
+   5          sbit NS_RED = P0^0;  // North South 
+   6          sbit NS_GREEN = P0^1;
+   7          sbit NS_YELLOW = P0^2;
+   8          sbit EW_RED = P0^3;   // East  West
+   9          sbit EW_GREEN = P0^4;
+  10          sbit EW_YELLOW = P0^5;
+  11          
+  12          // Button External Interrupt
+  13          sbit Btn1 = P3^2;  // RED LIGHT
+  14          sbit Btn2 = P3^3;  // YELLOW BLINK
+  15          unsigned int FLAG = 1;  // Enter the Main
+  16          
+  17          sbit SEG1 = P1^0;
+  18          sbit SEG2 = P1^1;
+  19          #define DataPort P2 // DUAN define
+  20          
+  21          // Digital Anode Code Value
+  22          unsigned char tab_disp[]= {0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90};
+  23          
+  24          //Init Time = 25
+  25          unsigned char N=25;
+  26          unsigned char step=1;
+  27          unsigned char i=0;
+  28          unsigned char f=0;
+  29          
+  30          
+  31          void delay(int t );
+  32          void deal(char m);
+  33          void display(char dat);
+  34          
+  35          void LEDS_RED();
+  36          void LEDS_YELLOW();
+  37          void LEDS_DARK();
+  38          void InitINT();
+  39          
+  40          void main()
+  41          {
+  42   1        unsigned char i;
+  43   1      
+  44   1        //Init EA
+  45   1        InitINT();
+  46   1        LEDS_DARK();
+  47   1      
+  48   1        while(1)
+  49   1        {
+  50   2          // normal light mode
+  51   2          if(FLAG == 1)
+  52   2          {
+  53   3            
+  54   3            // Time count
+C51 COMPILER V9.60.7.0   TRAFFIC_LIGHTS                                                    12/03/2023 15:13:00 PAGE 2   
+
+  55   3            if(step == 1) // step1 program
+  56   3            {
+  57   4              if(f == 0) // if first to step 1, give the number
+  58   4              {
+  59   5                i = 25;
+  60   5                f = 1;
+  61   5              }
+  62   4              else  // if not first to step 1, sub the i or change mode
+  63   4              {
+  64   5                if(i>1)
+  65   5                {
+  66   6                  i--;
+  67   6                }else
+  68   5                {
+  69   6                  step = 2;
+  70   6                  f = 0;
+  71   6                }
+  72   5              }
+  73   4            }
+  74   3            if(step == 2)
+  75   3            {
+  76   4              if(f == 0) // if first to step 2, give the number
+  77   4              {
+  78   5                i = 5;
+  79   5                f = 1;
+  80   5              }
+  81   4              else  // if not first to step 2, sub the i or change mode
+  82   4              {
+  83   5                if(i>1)
+  84   5                {
+  85   6                  i--;
+  86   6                }else
+  87   5                {
+  88   6                  step = 3;
+  89   6                  f = 0;
+  90   6                }
+  91   5              }
+  92   4            }
+  93   3            if(step == 3)
+  94   3            {
+  95   4              if(f == 0)  // if first to step 3, give the number
+  96   4              {
+  97   5                i = 25;
+  98   5                f = 1;
+  99   5              }
+ 100   4              else  // if not first to step 3, sub the i or change mode
+ 101   4              {
+ 102   5                if(i>1)
+ 103   5                {
+ 104   6                  i--;
+ 105   6                }else
+ 106   5                {
+ 107   6                  step = 4;
+ 108   6                  f = 0;
+ 109   6                }
+ 110   5              }
+ 111   4            }
+ 112   3            if(step == 4)
+ 113   3            {
+ 114   4              if(f == 0)  // if first to step 4, give the number
+ 115   4              {
+ 116   5                i = 5;
+C51 COMPILER V9.60.7.0   TRAFFIC_LIGHTS                                                    12/03/2023 15:13:00 PAGE 3   
+
+ 117   5                f = 1;
+ 118   5              }
+ 119   4              else  // if not first to step 4, sub the i or change mode
+ 120   4              {
+ 121   5                if(i>1)
+ 122   5                {
+ 123   6                  i--;
+ 124   6                }else
+ 125   5                {
+ 126   6                  step = 1;
+ 127   6                  f = 0;
+ 128   6                }
+ 129   5              }
+ 130   4            }
+ 131   3            
+ 132   3            if(step == 1) // NS_red and EW_green
+ 133   3            {
+ 134   4              NS_RED = 1;
+ 135   4              NS_GREEN = 0;
+ 136   4              NS_YELLOW = 0;
+ 137   4              EW_RED = 0;
+ 138   4              EW_GREEN = 1;
+ 139   4              EW_YELLOW = 0;
+ 140   4            }
+ 141   3            if(step == 2) // NS_red and EW_yellow
+ 142   3            {
+ 143   4              NS_RED = 1;
+ 144   4              NS_GREEN = 0;
+ 145   4              NS_YELLOW = 0;
+ 146   4              EW_RED = 0;
+ 147   4              EW_GREEN = 0;
+ 148   4              EW_YELLOW = 1;
+ 149   4            }
+ 150   3            if(step == 3) // NS_green and EW_red
+ 151   3            {
+ 152   4              NS_RED = 0;
+ 153   4              NS_GREEN = 1;
+ 154   4              NS_YELLOW = 0;
+ 155   4              EW_RED = 1;
+ 156   4              EW_GREEN = 0;
+ 157   4              EW_YELLOW = 0;
+ 158   4            }
+ 159   3            if(step == 4) // NS_green and EW_yellow
+ 160   3            {
+ 161   4              NS_RED = 0;
+ 162   4              NS_GREEN = 0;
+ 163   4              NS_YELLOW = 1;
+ 164   4              EW_RED = 1;
+ 165   4              EW_GREEN = 0;
+ 166   4              EW_YELLOW = 0;
+ 167   4            }
+ 168   3            
+ 169   3            deal(i); // show the number
+ 170   3          }
+ 171   2          
+ 172   2          // yellow light mod
+ 173   2          if(FLAG == 2)
+ 174   2          {
+ 175   3            LEDS_YELLOW();
+ 176   3            SEG1 = 0;
+ 177   3            SEG2 = 0;
+ 178   3            DataPort = 0XFF;
+C51 COMPILER V9.60.7.0   TRAFFIC_LIGHTS                                                    12/03/2023 15:13:00 PAGE 4   
+
+ 179   3          }
+ 180   2          
+ 181   2          // red light mod
+ 182   2          if(FLAG == 3)
+ 183   2          {
+ 184   3            LEDS_RED();
+ 185   3            SEG1 = 0;
+ 186   3            SEG2 = 0;
+ 187   3            DataPort = 0XFF;
+ 188   3          }
+ 189   2        }
+ 190   1      }
+ 191          
+ 192          
+ 193          // Digital Tube Show
+ 194          void display(char dat)
+ 195          {
+ 196   1        SEG1 = 0;
+ 197   1        SEG2 = 0;  // Dark the WEI
+ 198   1        DataPort = 0XFF;   // Dark the DUAN
+ 199   1        DataPort = tab_disp[dat/10];  //show the Anode Value
+ 200   1        if(dat/10)
+ 201   1          SEG1=1;
+ 202   1        delay(1000);
+ 203   1      
+ 204   1        DataPort=0XFF;
+ 205   1        SEG1=0;
+ 206   1        SEG2=0;  // Dark the WEI
+ 207   1        P2=tab_disp[dat%10];   //show the Anode Value
+ 208   1        SEG2=1;
+ 209   1        delay(1000);
+ 210   1      }
+ 211          //Iterator Show 60 times
+ 212          void deal(char m)
+ 213          {
+ 214   1        int t=60;
+ 215   1        while(t--)
+ 216   1          display(m);
+ 217   1      }
+ 218          
+ 219          
+ 220          
+ 221          
+ 222          // Init the External Interrupt
+ 223          void InitINT()
+ 224          {
+ 225   1        IT0 = 1;    //set INT0 int type (1:Falling 0:Low level)
+ 226   1        EX0 = 1;    //enable INT0 interrupt
+ 227   1        IT1 = 1;    //set INT0 int type (1:Falling 0:Low level)
+ 228   1        EX1 = 1;    //enable INT0 interrupt
+ 229   1        EA = 1;     //open global interrupt switch}
+ 230   1      }
+ 231          
+ 232          // Enter the External Interrupt
+ 233          void ExInt0() interrupt 0     
+ 234          {
+ 235   1        if(FLAG == 1)
+ 236   1        {
+ 237   2          FLAG = 2;
+ 238   2        }
+ 239   1        else if(FLAG == 2)
+ 240   1        {
+C51 COMPILER V9.60.7.0   TRAFFIC_LIGHTS                                                    12/03/2023 15:13:00 PAGE 5   
+
+ 241   2          FLAG = 1;
+ 242   2        }
+ 243   1      }
+ 244          
+ 245          void ExInt1() interrupt 2
+ 246          {
+ 247   1        if(FLAG == 1)
+ 248   1        {
+ 249   2          FLAG = 3;
+ 250   2        }
+ 251   1        else if(FLAG == 3)
+ 252   1        {
+ 253   2          FLAG = 1;
+ 254   2        }
+ 255   1      }
+ 256          
+ 257          
+ 258          
+ 259          // DARK
+ 260          void LEDS_DARK()
+ 261          {
+ 262   1        NS_RED = 0;
+ 263   1        NS_GREEN = 0;
+ 264   1        NS_YELLOW = 0;
+ 265   1        EW_RED = 0;
+ 266   1        EW_GREEN = 0;
+ 267   1        EW_YELLOW = 0;
+ 268   1      }
+ 269          // RED
+ 270          void LEDS_RED()
+ 271          {
+ 272   1        NS_RED = 1;  // LIGHT
+ 273   1        NS_GREEN = 0;
+ 274   1        NS_YELLOW = 0;
+ 275   1        EW_RED = 1;  // LIGHT
+ 276   1        EW_GREEN = 0;
+ 277   1        EW_YELLOW = 0;
+ 278   1      }
+ 279          // YELLOW BLINK
+ 280          void LEDS_YELLOW()
+ 281          {
+ 282   1        NS_RED = 0;
+ 283   1        NS_GREEN = 0;
+ 284   1        NS_YELLOW = 1;  // LIGHT
+ 285   1        EW_RED = 0;
+ 286   1        EW_GREEN = 0;
+ 287   1        EW_YELLOW = 1;  // LIGHT
+ 288   1      }
+ 289          
+ 290          
+ 291          
+ 292          
+ 293          void delay(int t )
+ 294          {
+ 295   1        while(t--);
+ 296   1      }
+ 297          
+ 298          
+ 299          
+ 300          
+ 301          
+ 302          
+C51 COMPILER V9.60.7.0   TRAFFIC_LIGHTS                                                    12/03/2023 15:13:00 PAGE 6   
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    493    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16       5
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
